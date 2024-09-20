@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Mini App</title>
+
+    <!-- Include the Telegram Web App JavaScript -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome to the Telegram Mini App</h1>
+    <p>Click the button below to interact with Telegram.</p>
+
+    <button id="sendDataButton">Send Data to Bot</button>
+
+    <script>
+        // Initialize Telegram Web App
+        const tg = window.Telegram.WebApp;
+
+        // Set the background color of the header
+        tg.HeaderColor = '#4682B4';  // Example color
+
+        // Show the Web App to the user
+        tg.expand();
+
+        // Handle button click
+        document.getElementById('sendDataButton').addEventListener('click', () => {
+            // Send data back to the bot when button is clicked
+            tg.sendData(JSON.stringify({ action: "buttonClicked", message: "Hello from the Mini App!" }));
+        });
+
+        // Optionally, handle closing of the Web App
+        tg.onEvent('mainButtonClicked', () => {
+            tg.close();
+        });
+    </script>
+
+</body>
+</html>
