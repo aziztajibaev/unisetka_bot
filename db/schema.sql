@@ -49,7 +49,7 @@ CREATE TABLE orders (
 -- ORDER_ITEMS Table
 CREATE TABLE order_items (
     item_id                 SERIAL PRIMARY KEY,
-    deal_id                 INTEGER REFERENCES orders(order_id),
+    deal_id                 INTEGER REFERENCES orders(order_id) ON DELETE CASCADE,  -- Cascade delete on orders
     height                  DECIMAL(10, 2),  -- Fixed typo: changed "heigth" to "height"
     width                   DECIMAL(10, 2),
     quantity                DECIMAL(10, 2),  -- Fixed typo: changed "quant" to "quantity"
@@ -58,3 +58,4 @@ CREATE TABLE order_items (
     color_id                INTEGER REFERENCES colors(color_id),
     raw_id                  INTEGER REFERENCES raws(raw_id)
 );
+

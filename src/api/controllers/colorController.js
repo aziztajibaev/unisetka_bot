@@ -1,88 +1,72 @@
-// src/api/controllers/colorController.js
-const { Pool } = require('pg');
-const config = require('../../config/config');
+const Color = require('../models/color');
 
-const pool = new Pool(config.DB_CONFIG);
-
-// Create a new color
-exports.create = async (req, res) => {
-    try {
-        const { name, price } = req.body;
-        const result = await pool.query(
-            'INSERT INTO colors (name, price) VALUES ($1, $2) RETURNING *',
-            [name, price]
-        );
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('Error creating color:', err);
-        res.status(500).send('Server error');
-    }
-};
-
-// Get all colors
-exports.getAll = async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM colors');
-        res.status(200).json(result.rows);
-    } catch (err) {
-        console.error('Error retrieving colors:', err);
-        res.status(500).send('Server error');
-    }
-};
-
-// Get a color by ID
-exports.getById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const result = await pool.query('SELECT * FROM colors WHERE color_id = $1', [id]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ msg: 'Color not found' });
+class ColorController {
+    // Get all colors
+    static async getAllColors(req, res) {
+        try {
+            const colors = await Color.findAll();
+            res.json(colors);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to retrieve colors' });
         }
-
-        res.status(200).json(result.rows[0]);
-    } catch (err) {
-        console.error('Error retrieving color:', err);
-        res.status(500).send('Server error');
     }
-};
 
-// Update a color by ID
-exports.update = async (req, res) => {
-    try {
+    // Get color by ID
+    static async getColorById(req, res) {
+        const { id } = req.params;
+        try {
+            const color = await Color.findById(id);
+            if (color) {
+                res.json(color);
+            } else {
+                res.status(404).json({ error: 'Color not found' });
+            }
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to retrieve color' });
+        }
+    }
+
+    // Create new color
+    static async createColor(req, res) {
+        const { name, price } = req.body;
+        const newColor = new Color({ name, price });
+        try {
+            await newColor.save();
+            res.status(201).json(newColor);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to create color' });
+        }
+    }
+
+    // Update color
+    static async updateColor(req, res) {
         const { id } = req.params;
         const { name, price } = req.body;
-
-        const result = await pool.query(
-            'UPDATE colors SET name = $1, price = $2 WHERE color_id = $3 RETURNING *',
-            [name, price, id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ msg: 'Color not found' });
+        try {
+            const color = await Color.findById(id);
+            if (color) {
+                color.name = name;
+                color.price = price;
+                await color.update();
+                res.json(color);
+            } else {
+                res.status(404).json({ error: 'Color not found' });
+            }
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to update color' });
         }
-
-        res.status(200).json(result.rows[0]);
-    } catch (err) {
-        console.error('Error updating color:', err);
-        res.status(500).send('Server error');
     }
-};
 
-// Delete a color by ID
-exports.delete = async (req, res) => {
-    try {
+    // Delete color
+    static async deleteColor(req, res) {
         const { id } = req.params;
-
-        const result = await pool.query('DELETE FROM colors WHERE color_id = $1 RETURNING *', [id]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ msg: 'Color not found' });
+        try {
+            await Color.delete(id);
+            res.status(204).send();
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to delete color' });
         }
-
-        res.status(200).json({ msg: 'Color deleted successfully' });
-    } catch (err) {
-        console.error('Error deleting color:', err);
-        res.status(500).send('Server error');
     }
-};
+}
+
+module.exports = ColorController;

@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-const config = require('../config/config'); // Adjust the path as needed
+const config = require('../../config/config'); // Adjust the path as needed
 
 const pool = new Pool(config.DB_CONFIG);
 

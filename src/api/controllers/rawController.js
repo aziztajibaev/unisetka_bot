@@ -1,88 +1,72 @@
-// src/api/controllers/rawController.js
-const { Pool } = require('pg');
-const config = require('../../config/config');
+const Raw = require('../models/raw');
 
-const pool = new Pool(config.DB_CONFIG);
-
-// Create a new raw
-exports.create = async (req, res) => {
-    try {
-        const { name, price } = req.body;
-        const result = await pool.query(
-            'INSERT INTO raws (name, price) VALUES ($1, $2) RETURNING *',
-            [name, price]
-        );
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error('Error creating raw:', err);
-        res.status(500).send('Server error');
-    }
-};
-
-// Get all raws
-exports.getAll = async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM raws');
-        res.status(200).json(result.rows);
-    } catch (err) {
-        console.error('Error retrieving raws:', err);
-        res.status(500).send('Server error');
-    }
-};
-
-// Get a raw by ID
-exports.getById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const result = await pool.query('SELECT * FROM raws WHERE raw_id = $1', [id]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ msg: 'Raw not found' });
+class RawController {
+    // Get all raws
+    static async getAllRaws(req, res) {
+        try {
+            const raws = await Raw.findAll();
+            res.json(raws);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to retrieve raws' });
         }
-
-        res.status(200).json(result.rows[0]);
-    } catch (err) {
-        console.error('Error retrieving raw:', err);
-        res.status(500).send('Server error');
     }
-};
 
-// Update a raw by ID
-exports.update = async (req, res) => {
-    try {
+    // Get raw by ID
+    static async getRawById(req, res) {
+        const { id } = req.params;
+        try {
+            const raw = await Raw.findById(id);
+            if (raw) {
+                res.json(raw);
+            } else {
+                res.status(404).json({ error: 'Raw not found' });
+            }
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to retrieve raw' });
+        }
+    }
+
+    // Create new raw
+    static async createRaw(req, res) {
+        const { name, price } = req.body;
+        const newRaw = new Raw({ name, price });
+        try {
+            await newRaw.save();
+            res.status(201).json(newRaw);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to create raw' });
+        }
+    }
+
+    // Update raw
+    static async updateRaw(req, res) {
         const { id } = req.params;
         const { name, price } = req.body;
-
-        const result = await pool.query(
-            'UPDATE raws SET name = $1, price = $2 WHERE raw_id = $3 RETURNING *',
-            [name, price, id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ msg: 'Raw not found' });
+        try {
+            const raw = await Raw.findById(id);
+            if (raw) {
+                raw.name = name;
+                raw.price = price;
+                await raw.update();
+                res.json(raw);
+            } else {
+                res.status(404).json({ error: 'Raw not found' });
+            }
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to update raw' });
         }
-
-        res.status(200).json(result.rows[0]);
-    } catch (err) {
-        console.error('Error updating raw:', err);
-        res.status(500).send('Server error');
     }
-};
 
-// Delete a raw by ID
-exports.delete = async (req, res) => {
-    try {
+    // Delete raw
+    static async deleteRaw(req, res) {
         const { id } = req.params;
-
-        const result = await pool.query('DELETE FROM raws WHERE raw_id = $1 RETURNING *', [id]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ msg: 'Raw not found' });
+        try {
+            await Raw.delete(id);
+            res.status(204).send();
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to delete raw' });
         }
-
-        res.status(200).json({ msg: 'Raw deleted successfully' });
-    } catch (err) {
-        console.error('Error deleting raw:', err);
-        res.status(500).send('Server error');
     }
-};
+}
+
+module.exports = RawController;
