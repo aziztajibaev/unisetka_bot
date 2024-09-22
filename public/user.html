@@ -1,0 +1,139 @@
+<!doctype html>
+<html data-bs-theme="light" lang="ru">
+<head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta http-equiv="Access-Control-Allow-Origin" content="*"/>
+   <title>USERS</title>
+
+   <link href="assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+   <link href="assets/fontawesome/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+   <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+   <script src="assets/jquery/jquery.min.js"></script>
+   <script src="assets/underscore/underscore.min.js"></script>
+   <script src="assets/angularjs/angular.min.js"></script>
+   <script src="assets/angularjs/angular-sanitize.min.js"></script>
+   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+   <!-- when any changes are done to telegram, version of all html's should be updated-->
+   <script src="scripts/user.js?ver=1.0"></script>
+</head>
+<style>
+    .card-img {
+      height: 100px;
+      width: 100px;
+      border-radius: 50%; /* Makes the image circular */
+      border: 1px;
+    }
+</style>
+<body ng-app="telegramApp" ng-controller="userCtrl as d" ng-cloak style="font-size: 15px;">
+    <div class="container-md py-2">
+        <div class="m-6 alert alert-danger" ng-if="d.error_message" ng-bind-html="d.error_message"></div>
+
+
+        <div ng-if="d.step == 1">
+           
+            <div class="container mt-2">
+                <ul class="nav nav-tabs mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link" ng-class="{'active': d.status === 'A'}" 
+                           href="#" ng-click="d.status = 'A'; d.getUsers(0, true);">Active</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" ng-class="{'active': d.status === 'P'}" 
+                           href="#" ng-click="d.status = 'P'; d.getUsers(0, true);">Passive</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" ng-class="{'active': d.status === 'R'}" 
+                           href="#" ng-click="d.status = 'R'; d.getUsers(0, true);">Murojatlar</a>
+                    </li>   
+                </ul>
+                            
+            
+                <div class="d-flex justify-content-center mb-3">
+                    <button type="button" style="width: 90%;" class="btn btn-success" ng-click="d.openUser()">Yangi foydalanuvchi qo'shish</button>
+                </div>
+    
+                <div class="col-24 px-2 mb-2 d-flex justify-content-between align-items-center">
+                    <input type="search" class="form-control form-control-sm ps-3 me-4" ng-model="d.search_user"
+                        ng-change="d.getUsers(0, true)" placeholder="Поиск..." style="height: 38px;">
+                    <nav class="pagination-content">
+                    <ul class="pagination mb-0">
+                        <li class="page-item arrow-item">
+                        <a class="page-link border-0 rounded-pill py-1 shadow-none" href="#" aria-label="Previous" ng-click="d.prevPage()">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                        </li>
+                        <li class="page-item" ng-repeat="pg in d.pages">
+                        <a class="page-link rounded-pill border-0 py-1 shadow-none"
+                            ng-click="d.getUsers(pg)"
+                            href="#"
+                            ng-class="{'fw-bold': d.current_page == pg}"
+                            ng-style="{background: d.current_page == pg ? 'var(--bs-secondary-bg)' : 'none'}">{{ pg + 1 }}</a>
+                        </li>
+                        <li class="page-item arrow-item">
+                        <a class="page-link border-0 rounded-pill py-1 shadow-none" href="#" aria-label="Next" ng-click="d.nextPage()">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                        </li>
+                    </ul>
+                    </nav>
+                </div>
+            
+                <div class="card border-info mb-2 p-0" ng-repeat="user in d.all_users">
+                    <div class="card-body p-1">
+                        <div class="row mb-2">
+                            <div class="col-4 d-flex align-items-center ">
+                                <img ng-if="user.photoUrl" ng-src="{{user.photoUrl}}" class="card-img" alt="{{user.name}}">
+                                <img ng-if="!user.photoUrl" src="./img/no_photo.jpg" class="card-img" alt="{{user.name}}">
+                            </div>
+                            <div class="col-8">
+                                <h5 class="card-title">{{ user.name }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted fst-italic">Telefon raqam: {{ user.phone_number}}</h6>
+                                <h6 class="card-subtitle mb-2 text-muted fst-italic">Username: @{{ user.username}}</h6>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="d-flex justify-content-end"  ng-if="user.status == 'A'">
+                                <button class="btn btn-primary me-2" ng-click="d.openUser(user)">Ochish</button>
+                                <button class="btn btn-secondary me-2" ng-click="d.passiveUser(user)">Passive</button>
+                                <button class="btn btn-danger me-2" ng-click="d.deleteUser(user)">O'chirish</button>
+                            </div>
+
+                            <div class="d-flex justify-content-end"  ng-if="user.status == 'P' || user.status == 'R'">
+                                <button class="btn btn-primary me-2" ng-click="d.activeUser(user)">Aktive</button>
+                                <button class="btn btn-danger me-2" ng-click="d.deleteUser(user)">O'chirish</button>
+                            </div>                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div ng-if="d.step == 2">
+            <div class="d-flex justify-content-center">
+                <div class="text-center">
+                    <img ng-if="d.user_photoUrl" ng-src="{{d.user_photoUrl}}" class="card-img text-center" alt="{{d.name}}">
+                    <img ng-if="!d.user_photoUrl" src="./img/no_photo.jpg" class="card-img text-center" alt="{{d.name}}">
+                    <p class="text-center text-muted mb-0" ng-if="d.user_id">user_id: {{d.user_id}}</p>
+                    <p class="text-center text-muted mt-0" ng-if="d.chat_id">chat_id: {{d.chat_id}}</p>
+                </div>
+            </div>
+        
+            <div class="mb-2">
+                <label for="exampleFormControlInput1" class="form-label">name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" ng-model="d.name" placeholder="name">
+            </div>
+            <div class="mb-2">
+                <label for="exampleFormControlInput1" class="form-label">phone <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" ng-model="d.phone_number" placeholder="phone">
+            </div>
+            <div class="mb-2">
+                <label for="exampleFormControlInput1" class="form-label">username</label>
+                <input type="text" class="form-control" ng-model="d.username" placeholder="username">
+            </div>
+        </div>
+
+
+    </div>
+</body>

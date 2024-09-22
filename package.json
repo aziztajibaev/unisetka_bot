@@ -3,15 +3,20 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"node src/bot/bot.js\" \"node src/api/app.js\""
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "axios": "^1.7.7",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "node-telegram-bot-api": "^0.66.0",
     "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
   }
 }

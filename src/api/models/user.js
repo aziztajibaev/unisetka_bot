@@ -23,8 +23,30 @@ class User {
     }
 
     static async findById(id) {
-        const result = await pool.query('SELECT * FROM users WHERE user_id = $1', [id]);
+        try {
+            const result = await pool.query('SELECT * FROM users WHERE user_id = $1', [id]);
+            return result.rows.length ? new User(result.rows[0]) : null;
+        } catch (error) {
+            console.error(`Error finding user by id: ${id}`, error);
+            throw error;
+        }
+    }
+
+    static async findByChatId(chatId) {
+        const result = await pool.query('SELECT * FROM users WHERE chat_id = $1', [chatId]);
         return result.rows.length ? new User(result.rows[0]) : null;
+    }
+
+    static async create(data) {
+        const result = await pool.query(
+            'INSERT INTO users (chat_id, name) VALUES ($1, $2) RETURNING *',
+            [data.chat_id, data.name]
+        );
+        return new User(result.rows[0]);
+    }
+
+    static async updateLanguage(chatId, lang) {
+        await pool.query('UPDATE users SET lang = $1 WHERE chat_id = $2', [lang, chatId]);
     }
 
     async save() {
@@ -46,6 +68,47 @@ class User {
     static async delete(id) {
         await pool.query('DELETE FROM users WHERE user_id = $1', [id]);
     }
+
+    // Pagination and Search Support
+    static async findWithPagination({ search, status, page_no, pageSize }) {
+        const whereClause = [];
+        const values = [];
+    
+        if (search) {
+            whereClause.push(`(name ILIKE $${values.length + 1} OR phone_number ILIKE $${values.length + 2} OR username ILIKE $${values.length + 2})`); // Case-insensitive search for username and phone number
+            values.push(`%${search}%`, `%${search}%`); // Push both username and phone number search patterns
+        }
+    
+        if (status) {
+            whereClause.push(`status = $${values.length + 1}`);
+            values.push(status);
+        }
+    
+        const whereSQL = whereClause.length ? `WHERE ${whereClause.join(' AND ')}` : '';
+        const offset = page_no * pageSize;
+    
+        const query = `
+            SELECT * FROM users ${whereSQL} 
+            ORDER BY user_id 
+            LIMIT $${values.length + 1} OFFSET $${values.length + 2}
+        `;
+    
+        values.push(pageSize, offset); // Push page size and offset for pagination
+    
+        const result = await pool.query(query, values);
+        const countQuery = `
+            SELECT COUNT(*) FROM users ${whereSQL}
+        `;
+    
+        const countResult = await pool.query(countQuery, values.slice(0, -2)); // Exclude page size and offset for count
+        const count = parseInt(countResult.rows[0].count, 10);
+    
+        return {
+            users: result.rows.map(row => new User(row)),
+            count
+        };
+    }
+    
 }
 
 module.exports = User;

@@ -19,5 +19,6 @@ module.exports = {
     LANG_DEFAULT: process.env.LANG_DEFAULT || 'en',  // Default language setting
 
     // Production or Development mode
-    NODE_ENV: process.env.NODE_ENV || 'development'
+    NODE_ENV: process.env.NODE_ENV || 'development',
+    WEB_APP_URL: process.env.WEB_APP_URL
 };

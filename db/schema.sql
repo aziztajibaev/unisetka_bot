@@ -1,7 +1,7 @@
 -- USERS Table
 CREATE TABLE users (
     user_id                 SERIAL PRIMARY KEY,
-    chat_id                 BIGINT UNIQUE NOT NULL,
+    chat_id                 BIGINT UNIQUE,  -- Make chat_id nullable by default
     name                    VARCHAR(50),
     phone_number            VARCHAR(20) NOT NULL,
     username                VARCHAR(50),
